@@ -1,0 +1,41 @@
+About BookingGuru
+BookingGuru is a fast-growing travel tech startup built for hotels. We empower accommodations to use the experience economy as a growth engine, helping them generate ancillary revenue through internal hotel services and external destination experiences and rentals.
+Our B2B2C platform connects hotels, service providers, and guests in one seamless ecosystem — and we’re expanding fast.
+
+
+Your Role
+We are looking for a committed and communicative Back-End Engineer (Node.js) to join our core tech team.
+Your main responsibility will be building integration microservices using third-party API documentation, connecting BookingGuru to external systems like MCPs (multi-channel platforms), PMSs, and others.
+This is a full-time freelance position with long-term potential. No other jobs or clients during engagement.
+
+
+What You’ll Do
+Develop robust microservices to connect BookingGuru with third-party platforms
+Work with API documentation to implement integrations
+Collaborate closely with our tech, product, and operations teams
+Deliver clean, scalable, and efficient code
+Help us expand our ecosystem with stability and performance in mind
+
+
+Requirements
+Minimum 5 years of coding experience, primarily in Node.js
+Proven experience with APIs and integration work
+Fluent in English, both spoken and written
+Communicative, dedicated, and proactive
+Familiar with MCPs and modern API standards
+Must be available full-time (no other jobs or clients)
+Able to issue monthly invoices (freelance setup)
+Willing to sign an NDA
+Comfortable working under pressure and meeting deadlines
+
+
+Nice to Have
+Experience with AI agents or automation
+Knowledge of additional back-end languages
+
+
+What We Offer
+100% remote, 45+ hours work week
+Long-term collaboration in a fast-paced, product-driven environment
+Opportunity to shape integrations in a growing, tech-focused travel platform
+Direct impact on real-world hotel operations

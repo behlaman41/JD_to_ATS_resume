@@ -1,0 +1,20 @@
+{
+  "jobTitle": "Back-End Engineer (Node.js)",
+  "company": "BookingGuru",
+  "location": "Remote/Hybrid",
+  "skills": [
+    "JavaScript",
+    "TypeScript",
+    "Node.js",
+    "AWS",
+    "REST API",
+    "Microservices",
+    "Machine Learning"
+  ],
+  "experience": "5+ years",
+  "requirements": {
+    "required": [],
+    "preferred": []
+  },
+  "summary": "About BookingGuru\nBookingGuru is a fast-growing travel tech startup built for hotels. We empower accommodations to use the experience economy as a growth engine, helping them generate ancillary revenue through internal hotel services and external destination experiences and rentals. Our B2B2C platform connects hotels, service providers, and guests in one seamless ecosystem — and we’re expanding fast. Your Role\nWe are looking for a committed and communicative Back-End Engineer (Node. js) to join our core tech team."
+}
