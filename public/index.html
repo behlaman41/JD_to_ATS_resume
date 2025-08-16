@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JD to ATS Resume Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #4facfe;
+            border-radius: 15px;
+            padding: 60px 40px;
+            text-align: center;
+            background: #f8fbff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #00f2fe;
+            background: #f0f9ff;
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #00f2fe;
+            background: #e6f7ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #4facfe;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            color: #4facfe;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        .remove-file {
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-file:hover {
+            background: #ff3742;
+            transform: scale(1.1);
+        }
+
+        .convert-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .convert-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .result-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .result-success {
+            border-left: 5px solid #2ed573;
+        }
+
+        .result-error {
+            border-left: 5px solid #ff4757;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .result-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #2ed573;
+            color: white;
+        }
+
+        .status-error {
+            background: #ff4757;
+            color: white;
+        }
+
+        .download-links {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            background: #5f27cd;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            background: #4c1a9b;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #d63031;
+        }
+
+        .success-message {
+            background: #e6ffe6;
+            color: #00b894;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #00b894;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 JD to ATS Resume Converter</h1>
+            <p>Transform job descriptions into perfectly formatted ATS-friendly resumes</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Drop your job description files here</div>
+                    <div class="upload-subtext">or click to browse (PDF, DOCX, TXT)</div>
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.docx,.txt">
+                </div>
+
+                <div class="file-list" id="fileList"></div>
+
+                <button class="convert-btn" id="convertBtn" disabled>
+                    🚀 Convert to ATS Resume
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Converting your job descriptions to ATS-friendly resumes...</p>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>📊 Conversion Results</h2>
+                <div id="results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const convertBtn = document.getElementById('convertBtn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const results = document.getElementById('results');
+
+        // File upload handlers
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        convertBtn.addEventListener('click', convertFiles);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        }
+
+        function addFiles(files) {
+            const validFiles = files.filter(file => {
+                const ext = file.name.toLowerCase();
+                return ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.txt');
+            });
+
+            selectedFiles = [...selectedFiles, ...validFiles];
+            updateFileList();
+            updateConvertButton();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            updateConvertButton();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">${getFileIcon(file.name)}</div>
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile(${index})">×</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.toLowerCase();
+            if (ext.endsWith('.pdf')) return '📄';
+            if (ext.endsWith('.docx')) return '📝';
+            if (ext.endsWith('.txt')) return '📃';
+            return '📄';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function updateConvertButton() {
+            convertBtn.disabled = selectedFiles.length === 0;
+        }
+
+        async function convertFiles() {
+            if (selectedFiles.length === 0) return;
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('jobDescriptions', file);
+            });
+
+            // Show loading
+            loading.style.display = 'block';
+            convertBtn.disabled = true;
+            resultsSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.results);
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.error || 'Conversion failed', 'error');
+                }
+
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+                convertBtn.disabled = false;
+            }
+        }
+
+        function displayResults(resultData) {
+            results.innerHTML = '';
+            
+            resultData.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = `result-item ${result.success ? 'result-success' : 'result-error'}`;
+                
+                let content = `
+                    <div class="result-header">
+                        <div class="result-title">${result.originalName}</div>
+                        <div class="result-status ${result.success ? 'status-success' : 'status-error'}">
+                            ${result.success ? '✅ Success' : '❌ Failed'}
+                        </div>
+                    </div>
+                `;
+                
+                if (result.success) {
+                    const pdfBlob = new Blob([Uint8Array.from(atob(result.pdfData), c => c.charCodeAt(0))], { type: 'application/pdf' });
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    content += `
+                        <div class="download-links">
+                            <a href="${pdfUrl}" class="download-btn" download="${result.outputFile}">
+                                📄 Download Resume PDF
+                            </a>
+                            <div class="download-btn" style="background: #6c5ce7; cursor: default;">
+                                📊 Analysis: ${result.reportFile}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    content += `<div class="error-message">${result.error}</div>`;
+                }
+                
+                resultItem.innerHTML = content;
+                results.appendChild(resultItem);
+            });
+            
+            resultsSection.style.display = 'block';
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type}-message`;
+            messageDiv.textContent = message;
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Make removeFile function global
+        window.removeFile = removeFile;
+    </script>
+</body>
+</html>

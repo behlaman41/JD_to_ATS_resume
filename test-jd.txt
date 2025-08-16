@@ -1,0 +1,50 @@
+Full Stack Engineer - AI/ML Platform
+
+Company: TechCorp Solutions
+Location: San Francisco, CA (Remote/Hybrid)
+
+Job Description:
+We are seeking a talented Full Stack Engineer to join our AI/ML platform team. You will be responsible for building scalable web applications that integrate with machine learning models and provide intuitive user experiences.
+
+Required Skills:
+- 3+ years of experience in full-stack development
+- Strong proficiency in JavaScript, TypeScript, and Node.js
+- Experience with React.js and modern frontend frameworks
+- Knowledge of backend technologies including NestJS or Express.js
+- Experience with databases (PostgreSQL, MongoDB)
+- Familiarity with cloud platforms (AWS, Docker)
+- Understanding of RESTful APIs and GraphQL
+- Experience with version control (Git)
+
+Preferred Skills:
+- Experience with AI/ML integration and LLM APIs
+- Knowledge of microservices architecture
+- Experience with CI/CD pipelines
+- Familiarity with vector databases
+- Experience with real-time applications
+- Knowledge of authentication systems (JWT, OAuth)
+
+Responsibilities:
+- Develop and maintain full-stack web applications
+- Integrate AI/ML models into production systems
+- Build responsive and intuitive user interfaces
+- Design and implement RESTful APIs
+- Collaborate with data science and DevOps teams
+- Optimize application performance and scalability
+- Write clean, maintainable, and well-documented code
+- Participate in code reviews and technical discussions
+
+Qualifications:
+- Bachelor's degree in Computer Science or related field
+- Minimum 3 years of professional software development experience
+- Strong problem-solving and analytical skills
+- Excellent communication and teamwork abilities
+- Experience working in Agile development environments
+
+What We Offer:
+- Competitive salary and equity package
+- Comprehensive health, dental, and vision insurance
+- Flexible work arrangements (remote/hybrid)
+- Professional development opportunities
+- Cutting-edge technology stack
+- Collaborative and innovative work environment

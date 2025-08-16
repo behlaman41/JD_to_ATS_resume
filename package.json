@@ -1,0 +1,30 @@
+{
+  "name": "resume_transformer",
+  "version": "3.0.0",
+  "main": "jd-to-resume.js",
+  "scripts": {
+    "start": "node jd-to-resume.js",
+    "cli": "node jd-to-resume.js",
+    "dev": "vercel dev",
+    "build": "echo 'Build completed'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "jd2resume": "./jd-to-resume.js"
+  },
+  "keywords": ["resume", "ats", "job-description", "cv", "generator", "web-ui"],
+  "author": "",
+  "license": "ISC",
+  "description": "Transform job descriptions into ATS-friendly resumes with CLI and Web UI",
+  "dependencies": {
+    "docx": "^9.5.1",
+    "mammoth": "^1.10.0",
+    "multiparty": "^4.2.3",
+    "pdf-parse": "^1.1.1",
+    "pdfmake": "^0.2.20",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  }
+}
