@@ -1,27 +1,30 @@
-# JD to ATS Resume Converter
+# JD → ATS Resume (AI Aligned)
 
 A powerful tool that converts job descriptions into ATS-friendly resumes using AI-powered analysis.
 
 ## Features
 
-- **CLI Tool**: Command-line interface for batch processing
-- **Web Interface**: User-friendly web UI for file uploads
-- **Multiple Formats**: Supports PDF, DOCX, and TXT job descriptions
-- **ATS Optimization**: Generates resumes optimized for Applicant Tracking Systems
-- **Analysis Reports**: Provides detailed analysis of job requirements
+- **Next.js UI**: Upload one or more JDs; download per-JD PDFs
+- **Multiple Formats**: Supports TXT, PDF, DOCX (JD inputs)
+- **Safe Edits**: No fabrication; only rephrase/reorder/tighten existing content
+- **OpenAI-Compatible**: Works with OpenAI, Groq, Together, OpenRouter (baseURL + key)
+- **ATS-Friendly**: Outputs plain text for your formatter; PDF keeps indentation/line breaks
 
 ## Project Structure
 
 ```
-├── api/
-│   └── upload.js          # Vercel serverless function
 ├── lib/
-│   ├── pdf-resume-generator.js
+│   ├── plaintext-pdf.js   # Render plain-text resume to PDF
 │   ├── simple-jd-analyzer.js
 │   └── simple-jd-parser.js
-├── public/
-│   └── index.html         # Web interface
-├── jd-to-resume.js        # Main CLI tool
+├── packages/
+│   └── ai-resume/         # TypeScript ESM AI module (OpenAI-compatible)
+├── apps/
+│   └── web/               # Next.js UI + API route
+│       └── pages/
+│           ├── index.tsx
+│           └── api/
+│               └── ai-update.ts
 ├── package.json
 └── vercel.json            # Vercel deployment config
 ```
@@ -34,51 +37,74 @@ npm install
 
 ## Usage
 
-### CLI Tool
+> Note: The legacy CLI has been removed. Use the Next.js UI and API.
+
+### AI Resume Updater
+
+Produces a structured edit plan and an updated plain-text resume (formatting is handled by your existing formatter).
+
+1) Extract your current resume to plain text (if needed):
 
 ```bash
-# Process a single job description
-node jd-to-resume.js --input job-description.txt --output ./output
-
-# Show help
-node jd-to-resume.js --help
+node extract-resume-text.js  # writes sample_resume_text.txt
 ```
 
-### Web Interface (Local Development)
+2) Build the AI package (first time):
 
 ```bash
-# Install Vercel CLI globally
-npm install -g vercel
-
-# Start local development server
-vercel dev
+npm run ai:build
 ```
+
+Outputs (if using CLI locally for testing only):
+- `output/edit_plan.json`: Structured plan of safe edits (no fabrication)
+- `output/updated_resume.txt`: Updated plain-text resume (ready for your formatter)
+
+### Web UI (Next.js)
+
+Upload single or multiple JD text files and download per-JD updated resume PDFs.
+
+```bash
+# From repo root
+npm install
+npm --workspace @resume/ai-resume run build
+npm run web:dev
+```
+
+Open http://localhost:3000 and upload `.txt`, `.pdf`, or `.docx` JD files. The API returns:
+- Per file: `{{company_name}}-amanbehl-resume.pdf` (download button)
+- Optional: Export plans CSV (count of AI actions per JD)
+
+Server route used: `POST /api/ai-update` with form-data field `jds` (multi).
 
 ## Deployment to Vercel
 
-1. **Install Vercel CLI**:
-   ```bash
-   npm install -g vercel
-   ```
+This repo is configured as a monorepo: Next.js UI + API routes in `apps/web`.
 
-2. **Login to Vercel**:
-   ```bash
-   vercel login
-   ```
+Option A — via CLI (root):
+```bash
+npm install -g vercel
+vercel login
+vercel --prod
+```
 
-3. **Deploy**:
-   ```bash
-   vercel
-   ```
-
-4. **Production Deployment**:
-   ```bash
-   vercel --prod
-   ```
+Option B — Vercel Dashboard:
+- Create a project from this repo
+- Root Directory: repository root
+- Build & Output Settings: use provided `vercel.json` (it builds `apps/web` with `@vercel/next` and deploys `api/*` functions)
 
 ## Environment Variables
 
-No environment variables are required for basic functionality.
+- `AI_API_KEY`: API key for your OpenAI-compatible provider.
+- `AI_BASE_URL`: Base URL for OpenAI-compatible APIs (e.g., Groq/Together/OpenRouter).
+- `AI_MODEL`: Model name (defaults to `gpt-4o-mini`).
+
+Note: An API key is required; no fallback is bundled. Set `AI_API_KEY` in `.env` or Vercel Project Settings.
+
+See `.env.example` for the required variables. On Vercel, set these in Project Settings → Environment Variables.
+
+## Notes on Formatting
+
+- The AI only edits plain text. The PDF rendering keeps line breaks and indentation. Fonts and margins match the current template (Helvetica, A4 with 40pt margins). If you have a different in-house formatter, feed `updated_resume.txt` to it to fully preserve your exact style.
 
 ## File Support
 
@@ -93,12 +119,11 @@ No environment variables are required for basic functionality.
 
 ## Dependencies
 
-- `docx`: Word document processing
-- `mammoth`: DOCX to HTML conversion
-- `multiparty`: File upload handling for Vercel
-- `pdf-parse`: PDF text extraction
-- `pdfmake`: PDF generation
-- `yargs`: CLI argument parsing
+- `mammoth`: DOCX text extraction (JD input)
+- `multiparty`: Multi-file upload parsing (API route)
+- `pdf-parse`: PDF text extraction (JD input & root resume)
+- `pdfmake`: PDF generation (render updated plain text)
+- `yargs`: Used by internal tooling
 
 ## License
 
