@@ -1,13 +1,38 @@
-const { JDToResumeConverter } = require('../jd-to-resume');
 const multiparty = require('multiparty');
 const fs = require('fs');
+const path = require('path');
 
-// Initialize converter
-const converter = new JDToResumeConverter();
+// Initialize converter with error handling
+let converter;
+try {
+  const { JDToResumeConverter } = require('../jd-to-resume');
+  converter = new JDToResumeConverter();
+  console.log('JDToResumeConverter initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize JDToResumeConverter:', error.message);
+  converter = null;
+}
 
 module.exports = async (req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  console.log('API endpoint called:', req.method, req.url);
+  
+  // Check if converter is initialized
+  if (!converter) {
+    console.error('Converter not initialized');
+    return res.status(500).json({ error: 'Server initialization failed' });
   }
 
   return new Promise((resolve, reject) => {
