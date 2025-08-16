@@ -19,13 +19,50 @@ export const config = {
 };
 
 async function getAiModule() {
-  const mod = await import(path.join(process.cwd(), 'packages/ai-resume/dist/index.js'));
+  // Try multiple possible paths for the AI module
+  const possiblePaths = [
+    path.join(process.cwd(), '../../packages/ai-resume/dist/index.js'),
+    path.join(process.cwd(), '../../../packages/ai-resume/dist/index.js'),
+    '/Users/amanbehl/Documents/resume_transformer/packages/ai-resume/dist/index.js'
+  ];
+  
+  let modulePath = null;
+  for (const testPath of possiblePaths) {
+    if (fs.existsSync(testPath)) {
+      modulePath = testPath;
+      break;
+    }
+  }
+  
+  if (!modulePath) {
+    throw new Error(`AI module not found. Tried paths: ${possiblePaths.join(', ')}`);
+  }
+  
+  const mod = await import(modulePath);
   return mod as any;
 }
 
 async function readRootResumeText() {
-  const resumePath = path.join(process.cwd(), 'Aman_Behl_ATS_Resume.pdf');
-  if (!fs.existsSync(resumePath)) throw new Error('Root resume PDF not found.');
+  // Try multiple possible paths for the resume PDF
+  const possiblePaths = [
+    path.join(process.cwd(), '../../Aman_Behl_ATS_Resume.pdf'),
+    path.join(process.cwd(), '../../../Aman_Behl_ATS_Resume.pdf'),
+    path.join(__dirname, '../../../../../Aman_Behl_ATS_Resume.pdf'),
+    '/Users/amanbehl/Documents/resume_transformer/Aman_Behl_ATS_Resume.pdf'
+  ];
+  
+  let resumePath = null;
+  for (const testPath of possiblePaths) {
+    if (fs.existsSync(testPath)) {
+      resumePath = testPath;
+      break;
+    }
+  }
+  
+  if (!resumePath) {
+    throw new Error(`Root resume PDF not found. Tried paths: ${possiblePaths.join(', ')}`);
+  }
+  
   const buf = fs.readFileSync(resumePath);
   const parsed = await pdfParse(buf);
   return parsed.text;
