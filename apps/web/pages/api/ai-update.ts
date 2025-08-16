@@ -55,8 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (err) return res.status(400).json({ error: err.message });
 
     try {
-      const jdFiles = (files?.jds as multiparty.File[]) || [];
-      if (!jdFiles.length) return res.status(400).json({ error: 'No JD files uploaded (field name: jds)' });
+      const jdFiles = (files?.files as multiparty.File[]) || [];
+      if (!jdFiles.length) return res.status(400).json({ error: 'No JD files uploaded (field name: files)' });
 
       const resumeText = await readRootResumeText();
       const { analyzeAndUpdateResume } = await getAiModule();
