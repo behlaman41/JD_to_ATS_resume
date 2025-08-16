@@ -75,11 +75,20 @@ module.exports = async (req, res) => {
             const result = await converter.convertSingleJD(file.path, outputDir);
             
             if (result.success) {
-              // Read the generated PDF and send as base64
-              const pdfBuffer = fs.readFileSync(result.outputFile);
-              result.pdfData = pdfBuffer.toString('base64');
-              result.outputFile = path.basename(result.outputFile);
-              result.reportFile = path.basename(result.reportFile);
+              // Check if PDF file exists before reading
+              if (fs.existsSync(result.outputFile)) {
+                // Read the generated PDF and send as base64
+                const pdfBuffer = fs.readFileSync(result.outputFile);
+                result.pdfData = pdfBuffer.toString('base64');
+                result.fileName = path.basename(result.outputFile);
+                result.outputFile = path.basename(result.outputFile);
+                result.reportFile = path.basename(result.reportFile);
+                console.log(`PDF file read successfully: ${result.outputFile}`);
+              } else {
+                console.error(`PDF file not found: ${result.outputFile}`);
+                result.success = false;
+                result.error = 'Generated PDF file not found';
+              }
             }
             
             results.push({

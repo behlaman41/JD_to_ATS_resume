@@ -38,7 +38,7 @@ class JDToResumeConverter {
       const baseName = path.basename(inputPath, path.extname(inputPath));
       const outputPath = path.join(outputDir, `${baseName}_ATS_Resume.pdf`);
       
-      this.generator.generateResume(analysis, outputPath);
+      await this.generator.generateResume(analysis, outputPath);
       console.log(`✅ Resume generated: ${outputPath}`);
       
       // Save analysis report
