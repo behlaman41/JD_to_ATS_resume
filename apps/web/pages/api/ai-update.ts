@@ -52,11 +52,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const form = new multiparty.Form({ maxFilesSize: 10 * 1024 * 1024, uploadDir: '/tmp' });
 
   form.parse(req, async (err, fields, files) => {
-    if (err) return res.status(400).json({ error: err.message });
-
     try {
+      if (err) return res.status(400).json({ error: err.message });
+
       const jdFiles = (files?.files as multiparty.File[]) || [];
       if (!jdFiles.length) return res.status(400).json({ error: 'No JD files uploaded (field name: files)' });
+
+      // Check if required environment variables are set
+      if (!process.env.AI_API_KEY) {
+        return res.status(500).json({ error: 'AI_API_KEY environment variable is not set. Please configure your Groq API key in .env.local' });
+      }
 
       const resumeText = await readRootResumeText();
       const { analyzeAndUpdateResume } = await getAiModule();
@@ -98,6 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             pdfData: pdfBuffer.toString('base64'),
           });
         } catch (e: any) {
+          console.error(`Error processing file ${file.originalFilename}:`, e);
           results.push({ originalName: file.originalFilename, error: e.message });
         } finally {
           try { fs.unlinkSync(file.path); } catch {}
@@ -106,6 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.json({ success: true, results });
     } catch (e: any) {
+      console.error('API Handler Error:', e);
       return res.status(500).json({ error: e.message });
     }
   });
