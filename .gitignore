@@ -25,3 +25,4 @@ coverage/
 .idea/
 .vercel/
 tmp/
+.vercel

@@ -23,10 +23,5 @@
       "src": "/",
       "dest": "/public/index.html"
     }
-  ],
-  "functions": {
-    "api/upload.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
