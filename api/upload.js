@@ -1,7 +1,6 @@
 const { JDToResumeConverter } = require('../jd-to-resume');
 const multiparty = require('multiparty');
 const fs = require('fs');
-const path = require('path');
 
 // Initialize converter
 const converter = new JDToResumeConverter();
