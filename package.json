@@ -6,7 +6,7 @@
     "start": "npm --workspace @resume/web run start",
     "cli": "echo 'Legacy CLI removed'",
     "dev": "vercel dev",
-    "build": "echo 'Build completed'",
+    "build": "cd apps/web && npm install && npm run build",
     "postinstall": "npm --workspace @resume/ai-resume run build || true",
     "test": "echo \"Error: no test specified\" && exit 1",
     "ai:build": "npm --workspace @resume/ai-resume run build",
