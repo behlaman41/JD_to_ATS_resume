@@ -3,6 +3,7 @@ import multiparty from 'multiparty';
 import fs from 'node:fs';
 import path from 'node:path';
 import pdfParse from 'pdf-parse';
+import { analyzeAndUpdateResume } from '@resume/ai-resume';
 
 const JobDescriptionParser = require('../../../../lib/simple-jd-parser');
 const JobDescriptionAnalyzer = require('../../../../lib/simple-jd-analyzer');
@@ -18,29 +19,7 @@ export const config = {
   },
 };
 
-async function getAiModule() {
-  // Try multiple possible paths for the AI module
-  const possiblePaths = [
-    path.join(process.cwd(), '../../packages/ai-resume/dist/index.js'),
-    path.join(process.cwd(), '../../../packages/ai-resume/dist/index.js'),
-    '/Users/amanbehl/Documents/resume_transformer/packages/ai-resume/dist/index.js'
-  ];
-  
-  let modulePath = null;
-  for (const testPath of possiblePaths) {
-    if (fs.existsSync(testPath)) {
-      modulePath = testPath;
-      break;
-    }
-  }
-  
-  if (!modulePath) {
-    throw new Error(`AI module not found. Tried paths: ${possiblePaths.join(', ')}`);
-  }
-  
-  const mod = await import(modulePath);
-  return mod as any;
-}
+// Directly import from workspace package to avoid dynamic import warnings
 
 async function readRootResumeText() {
   // Try multiple possible paths for the resume PDF
@@ -101,7 +80,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const resumeText = await readRootResumeText();
-      const { analyzeAndUpdateResume } = await getAiModule();
 
       const outputDir = '/tmp/output-ai';
       if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
@@ -119,12 +97,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             throw new Error('Only .txt, .pdf, .docx are supported');
           }
 
-          const ai = await analyzeAndUpdateResume(jdText, resumeText, {
-            apiKey: process.env.AI_API_KEY,
-            baseURL: process.env.AI_BASE_URL || process.env.OPENAI_BASE_URL,
-            model: process.env.AI_MODEL || 'gpt-4o-mini',
-            conservative: false,
-          });
+          const ai = process.env.AI_FAKE
+            ? {
+                plan: {
+                  objective: 'Test objective',
+                  constraints: [],
+                  riskChecks: [],
+                  jdHighlights: [],
+                  actions: [],
+                },
+                updatedResume: 'Updated resume text (fake) for test',
+                model: 'test-local',
+              }
+            : await analyzeAndUpdateResume(jdText, resumeText, {
+                apiKey: process.env.AI_API_KEY,
+                baseURL: process.env.AI_BASE_URL || process.env.OPENAI_BASE_URL,
+                model: process.env.AI_MODEL || 'gpt-4o-mini',
+                conservative: false,
+              });
 
           const company = inferCompanyName(jdText, [path.basename(file.originalFilename || 'jd', ext)]);
           const outPdf = path.join(outputDir, `${company}-amanbehl-resume.pdf`);
@@ -154,4 +144,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   });
 }
-

@@ -9,6 +9,7 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
+    "@resume/ai-resume": "0.1.0",
     "next": "^14.2.5",
     "multiparty": "^4.2.3",
     "pdf-parse": "^1.1.1",

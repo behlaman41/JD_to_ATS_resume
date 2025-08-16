@@ -8,11 +8,11 @@
     "dev": "vercel dev",
     "build": "cd apps/web && npm install && npm run build",
     "postinstall": "npm --workspace @resume/ai-resume run build || true",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node scripts/test-api-ai-update.mjs",
     "ai:build": "npm --workspace @resume/ai-resume run build",
     "ai:update": "node packages/ai-resume/dist/cli.js --jd JD.txt --resume sample_resume_text.txt --out output",
-    "web:dev": "npm --workspace @resume/web run dev",
-    "web:build": "npm --workspace @resume/web run build"
+    "web:dev": "npm run ai:build && npm --workspace @resume/web run dev",
+    "web:build": "npm run ai:build && npm --workspace @resume/web run build"
   },
   "bin": {},
   "keywords": [
