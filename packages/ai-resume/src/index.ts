@@ -35,16 +35,24 @@ export async function analyzeAndUpdateResume(
   const system = buildSystemPrompt(options.conservative);
   const user = buildUserPrompt(jdText, resumeText);
 
-  // We aim for provider compatibility. Prefer JSON object responses.
-  const response = await client.chat.completions.create({
-    model,
-    temperature,
-    response_format: { type: 'json_object' } as any,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-  });
+  // We aim for provider compatibility. Prefer JSON object responses but avoid
+  // hard failures if the provider cannot guarantee JSON mode. Some providers
+  // reject requests with invalid `response_format` parameters which previously
+  // caused a 400 error when processing JD.txt files. We now omit the
+  // `response_format` field and rely on our own JSON parsing fallback below.
+  let response;
+  try {
+    response = await client.chat.completions.create({
+      model,
+      temperature,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    });
+  } catch (err: any) {
+    throw new Error(`AI request failed: ${err.message}`);
+  }
 
   const content = response.choices?.[0]?.message?.content ?? '';
 
