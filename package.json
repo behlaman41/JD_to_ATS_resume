@@ -8,7 +8,7 @@
     "dev": "vercel dev",
     "build": "cd apps/web && npm install && npm run build",
     "postinstall": "npm --workspace @resume/ai-resume run build || true",
-    "test": "node scripts/test-api-ai-update.mjs",
+    "test": "jest",
     "ai:build": "npm --workspace @resume/ai-resume run build",
     "ai:update": "node packages/ai-resume/dist/cli.js --jd JD.txt --resume sample_resume_text.txt --out output",
     "web:dev": "npm run ai:build && npm --workspace @resume/web run dev",
@@ -39,6 +39,9 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@vercel/node": "^3.0.0"
+    "@vercel/node": "^3.0.0",
+    "@types/jest": "^29.5.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1"
   }
 }
