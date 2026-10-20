@@ -1,15 +1,16 @@
 // Runs the built /api/ai-update handler once in plain Node and prints the response as JSON.
 // Jest can't load the Next build output itself (it uses dynamic import()), so tests spawn this.
 //
-// Input (JSON in argv[2]):
+// Input (JSON on stdin):
 //   { headers?, files?: [{ name, content }], rawBody?, calls?: number, env? }
 // Output (stdout, last line): [{ status, headers, body }, ...] — one entry per call.
 
 import http from 'node:http';
+import fs from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 
-const spec = JSON.parse(process.argv[2] || '{}');
+const spec = JSON.parse(fs.readFileSync(0, 'utf8') || '{}');
 Object.assign(process.env, spec.env || {});
 
 const builtApiPath = path.join(process.cwd(), '.next/server/pages/api/ai-update.js');

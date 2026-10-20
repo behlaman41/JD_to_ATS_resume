@@ -4,6 +4,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import pdfParse from 'pdf-parse';
 import { analyzeAndUpdateResume } from '@resume/ai-resume';
+import {
+  ClientError,
+  MAX_BODY_BYTES,
+  MAX_FILES,
+  MAX_JD_CHARS,
+  createRateLimiter,
+  getClientIp,
+  getRequestOrigin,
+  isOriginAllowed,
+  rateLimitConfig,
+} from '../../lib/api-guard';
 
 const JobDescriptionParser = require('../../../../lib/simple-jd-parser');
 const JobDescriptionAnalyzer = require('../../../../lib/simple-jd-analyzer');
@@ -12,6 +23,7 @@ const PlaintextPDFGenerator = require('../../../../lib/plaintext-pdf');
 const parser = new JobDescriptionParser();
 const analyzer = new JobDescriptionAnalyzer();
 const pdfGen = new PlaintextPDFGenerator();
+const checkRateLimit = createRateLimiter(rateLimitConfig());
 
 export const config = {
   api: {
@@ -59,24 +71,64 @@ function inferCompanyName(jdText: string, fallbacks: string[] = []) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Vary', 'Origin');
+  if (!isOriginAllowed(req.headers)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  // Only echo back an origin that passed the allowlist; never '*'.
+  res.setHeader('Access-Control-Allow-Origin', getRequestOrigin(req.headers) as string);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const form = new multiparty.Form({ maxFilesSize: 10 * 1024 * 1024, uploadDir: '/tmp' });
+  const contentType = String(req.headers['content-type'] || '');
+  if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
+    return res.status(415).json({ error: 'Expected multipart/form-data' });
+  }
+  const contentLength = Number(req.headers['content-length']);
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    return res.status(413).json({ error: `Upload too large (max ${MAX_BODY_BYTES / (1024 * 1024)} MB)` });
+  }
+
+  const limit = checkRateLimit(getClientIp(req.headers, req.socket?.remoteAddress));
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfterSeconds));
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  // Covers chunked bodies with no Content-Length too: multiparty stops at these limits.
+  const form = new multiparty.Form({
+    maxFilesSize: MAX_BODY_BYTES,
+    maxFields: 10,
+    maxFieldsSize: 64 * 1024,
+    uploadDir: '/tmp',
+  });
 
   form.parse(req, async (err, fields, files) => {
     try {
-      if (err) return res.status(400).json({ error: err.message });
-
       const jdFiles = (files?.files as multiparty.File[]) || [];
-      if (!jdFiles.length) return res.status(400).json({ error: 'No JD files uploaded (field name: files)' });
+      const allFiles = Object.values(files || {}).flat() as multiparty.File[];
+      const cleanup = () => allFiles.forEach((f) => { try { fs.unlinkSync(f.path); } catch {} });
 
-      // Check if required environment variables are set
+      if (err) {
+        cleanup();
+        const status = (err as any).statusCode === 413 ? 413 : 400;
+        return res.status(status).json({ error: status === 413 ? 'Upload too large' : 'Invalid upload' });
+      }
+      if (!jdFiles.length) {
+        cleanup();
+        return res.status(400).json({ error: 'No JD files uploaded (field name: files)' });
+      }
+      if (jdFiles.length > MAX_FILES) {
+        cleanup();
+        return res.status(400).json({ error: `Too many files (max ${MAX_FILES} per request)` });
+      }
+
       if (!process.env.AI_API_KEY) {
-        return res.status(500).json({ error: 'AI_API_KEY environment variable is not set. Please configure your Groq API key in .env.local' });
+        cleanup();
+        console.error('AI_API_KEY is not set');
+        return res.status(503).json({ error: 'Service temporarily unavailable' });
       }
 
       const resumeText = await readRootResumeText();
@@ -94,7 +146,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           } else if (['.pdf', '.docx'].includes(ext)) {
             jdText = await parser.parseFile(file.path);
           } else {
-            throw new Error('Only .txt, .pdf, .docx are supported');
+            throw new ClientError('Only .txt, .pdf, .docx are supported');
+          }
+          if (!jdText.trim()) throw new ClientError('Job description is empty');
+          if (jdText.length > MAX_JD_CHARS) {
+            throw new ClientError(`Job description is too long (max ${MAX_JD_CHARS.toLocaleString('en-US')} characters)`);
           }
 
           const ai = process.env.AI_FAKE
@@ -131,7 +187,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           });
         } catch (e: any) {
           console.error(`Error processing file ${file.originalFilename}:`, e);
-          results.push({ originalName: file.originalFilename, error: e.message });
+          // Only validation messages go back to the client; upstream/AI errors stay in the logs.
+          const message = e instanceof ClientError ? e.message : 'Failed to process this file';
+          results.push({ originalName: file.originalFilename, error: message });
         } finally {
           try { fs.unlinkSync(file.path); } catch {}
         }
@@ -140,7 +198,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.json({ success: true, results });
     } catch (e: any) {
       console.error('API Handler Error:', e);
-      return res.status(500).json({ error: e.message });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 }
