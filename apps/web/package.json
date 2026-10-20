@@ -12,7 +12,7 @@
     "@resume/ai-resume": "0.1.0",
     "mammoth": "^1.10.0",
     "multiparty": "^4.2.3",
-    "next": "^14.2.35",
+    "next": "^15.5.24",
     "pdf-parse": "^1.1.1",
     "pdfmake": "^0.2.20",
     "react": "^18.2.0",
