@@ -27,3 +27,11 @@ coverage/
 .vercel/
 tmp/
 .vercel
+!.env.example
+*.tsbuildinfo
+
+# Personal data: the base resume and generated output stay local
+Aman_Behl_ATS_Resume.pdf
+resume.pdf
+sample_resume_text.txt
+output/

@@ -5,7 +5,9 @@ const pdfParse = require('pdf-parse');
 
 async function extractResumeText() {
   try {
-    const pdfBuffer = fs.readFileSync('Aman_Behl_ATS_Resume.pdf');
+    // Usage: node extract-resume-text.js [path/to/resume.pdf]
+    const resumePath = process.argv[2] || process.env.RESUME_PDF_PATH || 'Aman_Behl_ATS_Resume.pdf';
+    const pdfBuffer = fs.readFileSync(resumePath);
     const data = await pdfParse(pdfBuffer);
     
     console.log('=== EXTRACTED TEXT FROM RESUME ===');

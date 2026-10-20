@@ -15,6 +15,7 @@ function runHandler(spec: Record<string, unknown> = {}): HandlerResult[] {
       ...process.env,
       NODE_ENV: 'production',
       AI_API_KEY: 'sk-test-key',
+      RESUME_TEXT: 'Test Candidate\nBackend engineer. Node.js, AWS.',
     },
   });
   if (r.status !== 0) throw new Error(`handler runner failed:\n${r.error || r.stderr}`);
@@ -85,6 +86,15 @@ describe('guards', () => {
     });
     expect(results.map((r) => r.status)).toEqual([200, 200, 429]);
     expect(Number(results[2].headers['retry-after'])).toBeGreaterThan(0);
+  });
+
+  test('returns 503 without leaking details when no base resume is configured', () => {
+    const [res] = runHandler({
+      headers: { origin: SITE },
+      env: { RESUME_TEXT: '', RESUME_PDF_PATH: '/nonexistent/resume.pdf' },
+    });
+    expect(res.status).toBe(503);
+    expect(JSON.stringify(res.body)).not.toMatch(/nonexistent|RESUME/);
   });
 
   test('does not leak upstream AI errors or the key', () => {

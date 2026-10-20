@@ -31,31 +31,24 @@ export const config = {
   },
 };
 
-// Directly import from workspace package to avoid dynamic import warnings
+// The base resume comes from config, never from a path committed to the repo:
+// RESUME_TEXT (plain text, easiest on Vercel), else the PDF at RESUME_PDF_PATH,
+// which defaults to Aman_Behl_ATS_Resume.pdf at the repo root (gitignored).
+const DEFAULT_RESUME_PDF = 'Aman_Behl_ATS_Resume.pdf';
+const CANDIDATE_NAME = process.env.CANDIDATE_NAME || 'Aman Behl';
 
-async function readRootResumeText() {
-  // Try multiple possible paths for the resume PDF
-  const possiblePaths = [
-    path.join(process.cwd(), '../../Aman_Behl_ATS_Resume.pdf'),
-    path.join(process.cwd(), '../../../Aman_Behl_ATS_Resume.pdf'),
-    path.join(__dirname, '../../../../../Aman_Behl_ATS_Resume.pdf'),
-    '/Users/amanbehl/Documents/resume_transformer/Aman_Behl_ATS_Resume.pdf'
-  ];
-  
-  let resumePath = null;
-  for (const testPath of possiblePaths) {
-    if (fs.existsSync(testPath)) {
-      resumePath = testPath;
-      break;
-    }
-  }
-  
-  if (!resumePath) {
-    throw new Error(`Root resume PDF not found. Tried paths: ${possiblePaths.join(', ')}`);
-  }
-  
-  const buf = fs.readFileSync(resumePath);
-  const parsed = await pdfParse(buf);
+async function loadBaseResumeText(): Promise<string | null> {
+  if (process.env.RESUME_TEXT && process.env.RESUME_TEXT.trim()) return process.env.RESUME_TEXT;
+
+  const configured = process.env.RESUME_PDF_PATH || DEFAULT_RESUME_PDF;
+  // Relative paths resolve against the repo root; `next dev` runs from apps/web.
+  const candidates = path.isAbsolute(configured)
+    ? [configured]
+    : [path.resolve(process.cwd(), configured), path.resolve(process.cwd(), '../..', configured)];
+  const resumePath = candidates.find((p) => fs.existsSync(p));
+  if (!resumePath) return null;
+
+  const parsed = await pdfParse(fs.readFileSync(resumePath));
   return parsed.text;
 }
 
@@ -131,7 +124,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(503).json({ error: 'Service temporarily unavailable' });
       }
 
-      const resumeText = await readRootResumeText();
+      const resumeText = await loadBaseResumeText();
+      if (!resumeText) {
+        cleanup();
+        console.error('Base resume not configured: set RESUME_TEXT or RESUME_PDF_PATH');
+        return res.status(503).json({ error: 'Service temporarily unavailable' });
+      }
 
       const outputDir = '/tmp/output-ai';
       if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
@@ -173,9 +171,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               });
 
           const company = inferCompanyName(jdText, [path.basename(file.originalFilename || 'jd', ext)]);
-          const outPdf = path.join(outputDir, `${company}-amanbehl-resume.pdf`);
+          const outPdf = path.join(outputDir, `${company}-${CANDIDATE_NAME.toLowerCase().replace(/[^a-z0-9]/g, "")}-resume.pdf`);
 
-          await pdfGen.generateFromText(ai.updatedResume, outPdf, 'Aman Behl');
+          await pdfGen.generateFromText(ai.updatedResume, outPdf, CANDIDATE_NAME);
           const pdfBuffer = fs.readFileSync(outPdf);
 
           results.push({
