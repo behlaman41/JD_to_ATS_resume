@@ -97,6 +97,17 @@ describe('guards', () => {
     expect(JSON.stringify(res.body)).not.toMatch(/nonexistent|RESUME/);
   });
 
+  test('keeps output filenames inside the output dir (no path traversal from JD text)', () => {
+    const [res] = runHandler({
+      headers: { origin: SITE },
+      files: [{ name: 'jd.txt', content: 'Company: ../../../tmp/evil/x\nBackend role.' }],
+    });
+    expect(res.status).toBe(200);
+    // Old behaviour joined the raw company name into the path and wrote to /tmp/evil/.
+    expect(res.body.results[0].pdfFileName).toBe('tmpevilx-amanbehl-resume.pdf');
+    expect(res.body.results[0].pdfData).toBeTruthy();
+  });
+
   test('does not leak upstream AI errors or the key', () => {
     const [res] = runHandler({ headers: { origin: SITE }, env: { STUB_UPSTREAM_FAIL: '1' } });
     expect(res.status).toBe(200);

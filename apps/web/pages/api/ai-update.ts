@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import multiparty from 'multiparty';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import pdfParse from 'pdf-parse';
 import { analyzeAndUpdateResume } from '@resume/ai-resume';
@@ -52,13 +53,24 @@ async function loadBaseResumeText(): Promise<string | null> {
   return parsed.text;
 }
 
+/** Filename-safe slug: no path separators, no leading dots, bounded length. */
+function toSlug(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^A-Za-z0-9._-]/g, '')
+    .replace(/^[.-]+/, '')
+    .slice(0, 60);
+}
+
 function inferCompanyName(jdText: string, fallbacks: string[] = []) {
   try {
-    const company = analyzer.extractCompany(jdText);
-    if (company && company.trim().length > 0) return company.trim().replace(/\s+/g, '-');
+    const company = toSlug(analyzer.extractCompany(jdText) || '');
+    if (company) return company;
   } catch {}
   for (const f of fallbacks) {
-    if (f && f.trim()) return f.trim().replace(/\s+/g, '-');
+    const slug = toSlug(f || '');
+    if (slug) return slug;
   }
   return 'company';
 }
@@ -131,8 +143,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(503).json({ error: 'Service temporarily unavailable' });
       }
 
-      const outputDir = '/tmp/output-ai';
-      if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+      // Per-request output dir, so concurrent requests can't overwrite each other's PDFs.
+      const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-update-'));
 
       const results: any[] = [];
       for (const file of jdFiles) {
@@ -193,6 +205,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
+      fs.rmSync(outputDir, { recursive: true, force: true });
       return res.json({ success: true, results });
     } catch (e: any) {
       console.error('API Handler Error:', e);
