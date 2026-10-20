@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
-import { analyzeAndUpdateResume } from '../packages/ai-resume/src/index.ts';
-import * as clientModule from '../packages/ai-resume/src/client.ts';
+import { analyzeAndUpdateResume } from '../packages/ai-resume/src/index';
+import * as clientModule from '../packages/ai-resume/src/client';
 
 describe('analyzeAndUpdateResume', () => {
   it('returns parsed AI result', async () => {
@@ -14,7 +14,7 @@ describe('analyzeAndUpdateResume', () => {
       client: {
         chat: {
           completions: {
-            create: jest.fn().mockResolvedValue({
+            create: (jest.fn() as any).mockResolvedValue({
               choices: [{ message: { content: JSON.stringify(fakeResponse) } }],
             }),
           },

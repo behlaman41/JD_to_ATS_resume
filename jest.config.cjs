@@ -1,15 +1,15 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
-  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts'],
+  // The Next build output contains copies of the workspace package.json files.
+  modulePathIgnorePatterns: ['<rootDir>/apps/web/.next/'],
   moduleNameMapper: {
     '^@resume/(.*)$': '<rootDir>/packages/$1/src',
+    // Package sources use '.js' specifiers for sibling .ts files.
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {}],
   },
 };

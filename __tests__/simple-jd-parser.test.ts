@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import JobDescriptionParser from '../lib/simple-jd-parser.js';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const JobDescriptionParser = require('../lib/simple-jd-parser.js');
 
 describe('JobDescriptionParser', () => {
   it('parses txt files correctly', async () => {
