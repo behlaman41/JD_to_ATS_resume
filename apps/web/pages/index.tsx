@@ -13,6 +13,7 @@ export default function Home() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ApiResult[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -47,6 +48,7 @@ export default function Home() {
 
     setLoading(true);
     setResults([]);
+    setError(null);
 
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
@@ -58,10 +60,15 @@ export default function Home() {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || `Request failed (${res.status})`);
+        return;
+      }
       setResults(data.results || []);
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -217,6 +224,19 @@ export default function Home() {
             </div>
           </form>
         </div>
+
+        {error && (
+          <div role="alert" style={{
+            background: '#fee',
+            color: '#c33',
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 40,
+            border: '1px solid #fcc'
+          }}>
+            ❌ <strong>Error:</strong> {error}
+          </div>
+        )}
 
         {/* Results */}
         {results.length > 0 && (
