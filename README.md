@@ -43,10 +43,14 @@ npm install
 
 Produces a structured edit plan and an updated plain-text resume (formatting is handled by your existing formatter).
 
-1) Extract your current resume to plain text (if needed):
+1) Provide your base resume. It is never committed (see `.gitignore`):
+   - put the PDF at the repo root as `Aman_Behl_ATS_Resume.pdf`, or point `RESUME_PDF_PATH` at it, or
+   - set `RESUME_TEXT` to the plain-text resume (simplest on Vercel).
+
+   To get plain text from a PDF:
 
 ```bash
-node extract-resume-text.js  # writes sample_resume_text.txt
+node extract-resume-text.js path/to/resume.pdf  # writes sample_resume_text.txt
 ```
 
 2) Build the AI package (first time):
@@ -74,7 +78,9 @@ Open http://localhost:3000 and upload `.txt`, `.pdf`, or `.docx` JD files. The A
 - Per file: `{{company_name}}-amanbehl-resume.pdf` (download button)
 - Optional: Export plans CSV (count of AI actions per JD)
 
-Server route used: `POST /api/ai-update` with form-data field `jds` (multi).
+Server route used: `POST /api/ai-update` with multipart form-data field `files` (up to 3 files, 2 MB total).
+
+The route only accepts requests from the site's own origin (403 otherwise), is rate-limited per IP (429), and caps upload and job-description size (413/400). See `.env.example` for the settings.
 
 ## Deployment to Vercel
 
@@ -90,17 +96,18 @@ vercel --prod
 Option B — Vercel Dashboard:
 - Create a project from this repo
 - Root Directory: repository root
-- Build & Output Settings: use provided `vercel.json` (it builds `apps/web` with `@vercel/next` and deploys `api/*` functions)
+- Build & Output Settings: use provided `vercel.json` (it builds `apps/web` with `@vercel/next`)
 
 ## Environment Variables
 
-- `AI_API_KEY`: API key for your OpenAI-compatible provider.
+All variables are listed with comments in `.env.example`. Copy it to `apps/web/.env.local` for local development; on Vercel, set them in Project Settings → Environment Variables.
+
+- `AI_API_KEY` (required): API key for your OpenAI-compatible provider.
 - `AI_BASE_URL`: Base URL for OpenAI-compatible APIs (e.g., Groq/Together/OpenRouter).
 - `AI_MODEL`: Model name (defaults to `gpt-4o-mini`).
-
-Note: An API key is required; no fallback is bundled. Set `AI_API_KEY` in `.env` or Vercel Project Settings.
-
-See `.env.example` for the required variables. On Vercel, set these in Project Settings → Environment Variables.
+- `RESUME_TEXT` or `RESUME_PDF_PATH` (one is required): the base resume.
+- `CANDIDATE_NAME`: name on generated PDFs.
+- `ALLOWED_ORIGINS`, `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS` (optional): route protection.
 
 ## Notes on Formatting
 
